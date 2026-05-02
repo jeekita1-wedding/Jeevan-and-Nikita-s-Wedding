@@ -465,13 +465,11 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
       <div class="c-slide" style="background-image:url('https://dynamic-media-cdn.tripadvisor.com/media/photo-o/08/fb/c2/62/jardins-de-alfabia.jpg?w=1200&h=-1&s=1');background-position:center 30%;"></div>
       <div class="c-slide" style="background-image:url('https://images.trvl-media.com/lodging/2000000/1210000/1204800/1204762/be644eb1.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill');"></div>
       <div class="c-slide" style="background-image:url('https://i.postimg.cc/hjwR5VLs/Untitled-design-(59).png');background-position:center top;"></div>
-      <div class="c-slide" style="background-image:url('https://i.postimg.cc/4KSD70TP/Whats-App-Image-2026-04-06-at-17-30-52.jpg');background-position:center center;"></div>
-      <div class="c-slide" style="background-image:url('https://i.postimg.cc/mc5vznGN/Whats-App-Image-2026-04-06-at-17-30-52-(1).jpg');background-position:center center;"></div>
-      <div class="c-slide" style="background-image:url('https://i.postimg.cc/3ycs4qHB/Whats-App-Image-2026-04-06-at-17-30-52-(2).jpg');background-position:center center;"></div>
+
     </div>
     <button class="c-arrow c-arrow-prev" id="cPrev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
     <button class="c-arrow c-arrow-next" id="cNext"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
-    <div class="c-counter" id="cCounter">1 / 7</div>
+    <div class="c-counter" id="cCounter">1 / 4</div>
     <div class="c-caption" id="cCaption">Mallorca, Spain</div>
     <div class="c-thumbs" id="cThumbs"></div>
   </div>
@@ -948,7 +946,6 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
       <li class="tl"><span class="tl-t">Afternoon</span><div class="tl-spine"><div class="tl-gem"></div><div class="tl-line"></div></div><div class="tl-body"><h4>Mehndi Begins</h4><p>Henna artists set up and begin applying mehndi. Ladies are encouraged to arrive early to ensure time for everyone.</p></div></li>
       <li class="tl"><span class="tl-t">TBC</span><div class="tl-spine"><div class="tl-gem"></div><div class="tl-line"></div></div><div class="tl-body"><h4>Light Refreshments</h4><p>Drinks and canapés served as the mehndi session continues.</p></div></li>
       <li class="tl"><span class="tl-t">Evening</span><div class="tl-spine"><div class="tl-gem"></div><div class="tl-line"></div></div><div class="tl-body"><h4>Sangeet Begins</h4><p>The evening celebration begins — all guests join for music, performances and dancing. Both families come together to celebrate.</p></div></li>
-      <li class="tl"><span class="tl-t">TBC</span><div class="tl-spine"><div class="tl-gem"></div><div class="tl-line"></div></div><div class="tl-body"><h4>Dinner</h4><p>A seated dinner served during the Sangeet festivities, with music and celebrations continuing throughout.</p></div></li>
       <li class="tl"><span class="tl-t">TBC</span><div class="tl-spine"><div class="tl-gem"></div><div class="tl-line"></div></div><div class="tl-body"><h4>Dancing &amp; Performances</h4><p>The dancefloor is open all evening — Bhangra and Bollywood until late.</p></div></li>
     </ul>
   </div>
@@ -1038,12 +1035,7 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
       <p class="body-copy" style="margin-top:16px;">Following the ceremony, the day continues with lunch, relaxation, before the evening reception at the spectacular Jardins d'Alfàbia.</p>
     </div>
   </div>
-  <div class="about-right" style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;min-height:480px;">
-    <img src="https://i.postimg.cc/4KSD70TP/Whats-App-Image-2026-04-06-at-17-30-52.jpg" alt="The Wedding" style="width:100%;height:100%;object-fit:cover;display:block;">
-    <img src="https://i.postimg.cc/mc5vznGN/Whats-App-Image-2026-04-06-at-17-30-52-(1).jpg" alt="The Wedding" style="width:100%;height:100%;object-fit:cover;display:block;">
-    <img src="https://i.postimg.cc/3ycs4qHB/Whats-App-Image-2026-04-06-at-17-30-52-(2).jpg" alt="The Wedding" style="width:100%;height:100%;object-fit:cover;display:block;">
-    <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/08/fb/c2/62/jardins-de-alfabia.jpg?w=1200&h=-1&s=1" alt="Jardins d'Alfàbia" style="width:100%;height:100%;object-fit:cover;display:block;">
-  </div>
+  <div class="about-right"><img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/08/fb/c2/62/jardins-de-alfabia.jpg?w=1200&h=-1&s=1" alt="Jardins d'Alfàbia" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
 </section>
 
 <section class="ceremony-sec">
@@ -1291,15 +1283,12 @@ const slides = document.querySelectorAll('.c-slide');
 const thumbsWrap = document.getElementById('cThumbs');
 const counter = document.getElementById('cCounter');
 const caption = document.getElementById('cCaption');
-const captions = ['Mallorca, Spain',"Jardins d'Alfàbia — Wedding Venue",'Iberostar Waves Cristina','Jeevan & Nikita','The Wedding','The Wedding','The Wedding'];
+const captions = ['Mallorca, Spain',"Jardins d'Alfàbia — Wedding Venue",'Iberostar Waves Cristina','Jeevan & Nikita'];
 const thumbUrls = [
   'https://bynder.onthebeach.co.uk/cdn-cgi/image/width=1400,quality=60,fit=cover,format=auto/m/ab2c7d9ba70c2d/original/Majorca.jpg',
   'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/08/fb/c2/62/jardins-de-alfabia.jpg?w=1200&h=-1&s=1',
   'https://images.trvl-media.com/lodging/2000000/1210000/1204800/1204762/be644eb1.jpg?impolicy=resizecrop&rw=575&rh=575&ra=fill',
-  'https://i.postimg.cc/hjwR5VLs/Untitled-design-(59).png',
-  'https://i.postimg.cc/4KSD70TP/Whats-App-Image-2026-04-06-at-17-30-52.jpg',
-  'https://i.postimg.cc/mc5vznGN/Whats-App-Image-2026-04-06-at-17-30-52-(1).jpg',
-  'https://i.postimg.cc/3ycs4qHB/Whats-App-Image-2026-04-06-at-17-30-52-(2).jpg'
+  'https://i.postimg.cc/hjwR5VLs/Untitled-design-(59).png'
 ];
 let cur = 0, autoTimer;
 thumbUrls.forEach((url,i) => {
