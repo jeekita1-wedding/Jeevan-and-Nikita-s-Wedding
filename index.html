@@ -70,6 +70,7 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
 .footer-links a:hover{color:var(--sage-light);}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 /* ══════════════════════════════════════
    HOME PAGE
@@ -388,6 +389,7 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
     <li><a id="nav-mehndi" onclick="showPage('mehndi')">Mehndi &amp; Sangeet</a></li>
     <li><a id="nav-wedding" onclick="showPage('wedding')">The Wedding</a></li>
     <li><a id="nav-mallorca" onclick="showPage('mallorca')">Mallorca</a></li>
+    <li><a id="nav-photos" onclick="showPage('photos')">Photos</a></li>
   </ul>
   <img class="nav-logo-img" src="https://lh3.googleusercontent.com/d/1xPwsH6VYsc0tNZ4GgQhpK8ixrdptIi_Q=s400" alt="J&N" onerror="this.style.display='none'">
   <div class="nav-hamburger" onclick="openMobileMenu()">
@@ -403,6 +405,7 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
   <a onclick="showPage('mehndi');closeMobileMenu()" id="mnav-mehndi">Mehndi &amp; Sangeet</a>
   <a onclick="showPage('wedding');closeMobileMenu()" id="mnav-wedding">The Wedding</a>
   <a onclick="showPage('mallorca');closeMobileMenu()" id="mnav-mallorca">Mallorca</a>
+  <a onclick="showPage('photos');closeMobileMenu()" id="mnav-photos">Photos</a>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -747,6 +750,7 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
     <li><a onclick="showPage('mehndi')">Mehndi</a></li>
     <li><a onclick="showPage('wedding')">The Wedding</a></li>
     <li><a onclick="showPage('mallorca')">Mallorca</a></li>
+    <li><a onclick="showPage('photos')">Photos</a></li>
   </ul>
 </footer>
 </div><!-- end #page-home -->
@@ -873,6 +877,7 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
     <li><a onclick="showPage('mehndi')">Mehndi</a></li>
     <li><a onclick="showPage('wedding')">The Wedding</a></li>
     <li><a onclick="showPage('mallorca')">Mallorca</a></li>
+    <li><a onclick="showPage('photos')">Photos</a></li>
   </ul>
 </footer>
 </div><!-- end #page-jago -->
@@ -983,6 +988,7 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
     <li><a onclick="showPage('mehndi')">Mehndi</a></li>
     <li><a onclick="showPage('wedding')">The Wedding</a></li>
     <li><a onclick="showPage('mallorca')">Mallorca</a></li>
+    <li><a onclick="showPage('photos')">Photos</a></li>
   </ul>
 </footer>
 </div><!-- end #page-mehndi -->
@@ -1134,6 +1140,7 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
     <li><a onclick="showPage('mehndi')">Mehndi</a></li>
     <li><a onclick="showPage('wedding')">The Wedding</a></li>
     <li><a onclick="showPage('mallorca')">Mallorca</a></li>
+    <li><a onclick="showPage('photos')">Photos</a></li>
   </ul>
 </footer>
 </div><!-- end #page-wedding -->
@@ -1248,13 +1255,14 @@ footer{background:var(--deep);padding:44px 56px;display:flex;align-items:center;
     <li><a onclick="showPage('mehndi')">Mehndi</a></li>
     <li><a onclick="showPage('wedding')">The Wedding</a></li>
     <li><a onclick="showPage('mallorca')">Mallorca</a></li>
+    <li><a onclick="showPage('photos')">Photos</a></li>
   </ul>
 </footer>
 </div><!-- end #page-mallorca -->
 
 <script>
 /* ── PAGE NAVIGATION ── */
-const PAGES = ['home','jago','mehndi','wedding','mallorca'];
+const PAGES = ['home','jago','mehndi','wedding','mallorca','photos'];
 function showPage(id) {
   PAGES.forEach(p => {
     document.getElementById('page-'+p).classList.toggle('active', p===id);
@@ -1335,6 +1343,347 @@ function observeTimelines(){
   document.querySelectorAll('.tl:not(.vis)').forEach(el=>obs.observe(el));
 }
 observeTimelines();
+
+
+/* ══════════════════════════════════════
+   PHOTO WALL — JSONBin
+══════════════════════════════════════ */
+const JSONBIN_API_KEY = 'PASTE_YOUR_JSONBIN_API_KEY_HERE';
+const JSONBIN_BIN_ID  = 'PASTE_YOUR_BIN_ID_HERE';
+const JSONBIN_URL     = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+const JSONBIN_HEADERS = {
+  'Content-Type': 'application/json',
+  'X-Master-Key': JSONBIN_API_KEY,
+  'X-Bin-Versioning': 'false'
+};
+
+let photoData = { photos: [] };
+let selectedImageBase64 = null;
+
+/* Compress image before storing */
+function compressImage(file, maxW=1200, quality=0.78) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => {
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').style.borderColor = 'var(--sage-pale)';
+  document.getElementById('dropZone').style.background = 'transparent';
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) processFile(file);
+}
+
+async function processFile(file) {
+  if (file.size > 4 * 1024 * 1024) {
+    setStatus('Photo is too large — please choose one under 4MB.', 'error');
+    return;
+  }
+  const base64 = await compressImage(file);
+  selectedImageBase64 = base64;
+  document.getElementById('previewImg').src = base64;
+  document.getElementById('previewWrap').style.display = 'block';
+  document.getElementById('dropZone').style.display = 'none';
+}
+
+function clearPreview() {
+  selectedImageBase64 = null;
+  document.getElementById('previewImg').src = '';
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('photoInput').value = '';
+}
+
+function setStatus(msg, type='info') {
+  const el = document.getElementById('uploadStatus');
+  el.textContent = msg;
+  el.style.color = type === 'error' ? '#c0392b' : type === 'success' ? 'var(--sage)' : 'var(--text-muted)';
+}
+
+async function loadPhotos() {
+  if (JSONBIN_BIN_ID === 'PASTE_YOUR_BIN_ID_HERE') {
+    document.getElementById('galleryLoading').style.display = 'none';
+    document.getElementById('galleryEmpty').style.display = 'block';
+    return;
+  }
+  try {
+    const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
+    const data = await res.json();
+    photoData = data.record || { photos: [] };
+    renderGallery();
+  } catch(e) {
+    document.getElementById('galleryLoading').style.display = 'none';
+    document.getElementById('galleryEmpty').style.display = 'block';
+  }
+}
+
+async function savePhotos() {
+  await fetch(JSONBIN_URL, {
+    method: 'PUT',
+    headers: JSONBIN_HEADERS,
+    body: JSON.stringify(photoData)
+  });
+}
+
+async function submitPhoto() {
+  const name    = document.getElementById('uploaderName').value.trim();
+  const caption = document.getElementById('uploaderCaption').value.trim();
+  const day     = document.getElementById('uploaderDay').value;
+
+  if (!name)                { setStatus('Please enter your name.', 'error'); return; }
+  if (!selectedImageBase64) { setStatus('Please choose a photo.', 'error'); return; }
+
+  setStatus('Uploading...', 'info');
+  document.querySelector('[onclick="submitPhoto()"]').disabled = true;
+
+  const entry = {
+    id: Date.now().toString(),
+    name,
+    caption,
+    day,
+    image: selectedImageBase64,
+    date: new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' })
+  };
+
+  photoData.photos.unshift(entry);
+
+  try {
+    await savePhotos();
+    setStatus('Photo shared successfully!', 'success');
+    renderGallery();
+    // Reset form
+    document.getElementById('uploaderName').value = '';
+    document.getElementById('uploaderCaption').value = '';
+    clearPreview();
+    setTimeout(() => setStatus(''), 3000);
+  } catch(e) {
+    photoData.photos.shift();
+    setStatus('Upload failed — please try again.', 'error');
+  }
+  document.querySelector('[onclick="submitPhoto()"]').disabled = false;
+}
+
+async function deletePhoto(id) {
+  if (!confirm('Remove this photo from the gallery?')) return;
+  photoData.photos = photoData.photos.filter(p => p.id !== id);
+  await savePhotos();
+  renderGallery();
+}
+
+function renderGallery() {
+  const loading = document.getElementById('galleryLoading');
+  const empty   = document.getElementById('galleryEmpty');
+  const grid    = document.getElementById('photoGrid');
+
+  loading.style.display = 'none';
+
+  if (!photoData.photos || photoData.photos.length === 0) {
+    empty.style.display  = 'block';
+    grid.style.display   = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  grid.style.display  = 'block';
+
+  grid.innerHTML = photoData.photos.map(p => `
+    <div style="break-inside:avoid;margin-bottom:3px;position:relative;background:#fff;border:0.5px solid var(--border);overflow:hidden;cursor:pointer;" onclick="openLightbox('${p.id}')">
+      <img src="${p.image}" alt="${p.name}" style="width:100%;display:block;transition:transform 0.6s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+      <div style="padding:18px 16px 14px;">
+        <p style="font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;font-weight:400;color:var(--text);margin-bottom:4px;">${p.name}</p>
+        ${p.caption ? `<p style="font-size:12.5px;line-height:1.65;color:var(--text-mid);font-weight:300;margin-bottom:8px;">${p.caption}</p>` : ''}
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <span style="font-size:9.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--sage);">${p.day}</span>
+          <button onclick="event.stopPropagation();deletePhoto('${p.id}')" style="font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);background:none;border:0.5px solid var(--border);padding:4px 10px;cursor:pointer;font-family:'Jost',sans-serif;transition:all 0.2s;" onmouseover="this.style.color='#c0392b';this.style.borderColor='#c0392b'" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)'">Remove</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openLightbox(id) {
+  const p = photoData.photos.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('lightboxImg').src     = p.image;
+  document.getElementById('lightboxName').textContent    = p.name;
+  document.getElementById('lightboxCaption').textContent = p.caption || '';
+  document.getElementById('lightboxDay').textContent     = p.day;
+  const lb = document.getElementById('lightbox');
+  lb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+/* Load photos when Photos page is shown */
+const _origShowPage = showPage;
+window.showPage = function(id) {
+  _origShowPage(id);
+  if (id === 'photos') loadPhotos();
+};
+
 </script>
+
+<!-- ══════════════════════════════════════
+     PAGE: PHOTOS
+══════════════════════════════════════ -->
+<div id="page-photos" class="page">
+
+<section style="min-height:40vh;display:flex;align-items:flex-end;justify-content:flex-start;position:relative;overflow:hidden;padding:100px 72px 72px;">
+  <div style="position:absolute;inset:0;background-image:url('https://bynder.onthebeach.co.uk/cdn-cgi/image/width=1400,quality=60,fit=cover,format=auto/m/ab2c7d9ba70c2d/original/Majorca.jpg');background-size:cover;background-position:center 55%;"></div>
+  <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(8,10,5,0.74) 0%,rgba(8,10,5,0.36) 60%,rgba(8,10,5,0.08) 100%);"></div>
+  <svg class="botanical" style="top:60px;right:0;width:190px;opacity:0.5;" viewBox="0 0 190 280" fill="none">
+    <path d="M180 0 C177 44 182 92 170 148 C163 180 174 218 172 262" stroke="#8a9e78" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M170,54 C148,34 118,40 112,66 C106,92 128,112 152,106 C176,100 184,76 170,56Z" fill="#8a9e78" opacity="0.65"/>
+    <path d="M170,54 C148,72 128,98 112,66" stroke="#5f7350" stroke-width="0.82" fill="none"/>
+    <circle cx="110" cy="60" r="3.5" fill="#6b8a58" opacity="0.55"/>
+    <path d="M172,110 C192,92 210,100 208,122 C206,144 186,154 166,148 C146,142 138,122 154,108Z" fill="#9aae88" opacity="0.58"/>
+    <path d="M170,162 C148,148 124,154 122,174 C120,194 140,204 160,198 C180,192 186,172 170,160Z" fill="#7d9168" opacity="0.62"/>
+  </svg>
+  <div style="position:relative;z-index:2;max-width:580px;">
+    <span style="font-size:10px;letter-spacing:0.38em;text-transform:uppercase;color:var(--sage-light);margin-bottom:16px;display:block;opacity:0;animation:fadeUp 0.9s 0.2s ease forwards;">Share your memories</span>
+    <h1 style="font-family:'Cormorant Garamond',serif;font-size:clamp(48px,7vw,88px);font-weight:400;font-style:italic;line-height:1;color:white;margin-bottom:16px;text-shadow:0 4px 40px rgba(0,0,0,0.3);opacity:0;animation:fadeUp 1s 0.4s ease forwards;">Guest Photos</h1>
+    <div style="width:60px;height:0.5px;background:var(--sage-light);margin:18px 0;opacity:0;animation:fadeUp 0.9s 0.5s ease forwards;"></div>
+    <span style="font-size:11px;letter-spacing:0.26em;text-transform:uppercase;color:rgba(255,255,255,0.5);opacity:0;animation:fadeUp 0.9s 0.6s ease forwards;">Mallorca · May 2026</span>
+  </div>
+</section>
+
+<!-- UPLOAD SECTION -->
+<section style="background:#fff;padding:72px 60px;position:relative;overflow:hidden;">
+  <svg class="botanical" style="top:-10px;left:-20px;width:220px;opacity:0.62;" viewBox="0 0 220 320" fill="none">
+    <path d="M28 0 C31 46 24 96 36 154 C43 190 32 232 28 276" stroke="#8a9e78" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M36,54 C60,32 98,38 106,64 C114,90 92,112 66,106 C40,100 26,78 38,56Z" fill="#8a9e78" opacity="0.70"/>
+    <path d="M36,54 C62,72 86,100 106,64" stroke="#5f7350" stroke-width="0.88" fill="none"/>
+    <circle cx="102" cy="58" r="4" fill="#6b8a58" opacity="0.60"/>
+    <path d="M26,90 C2,70 -22,78 -24,104 C-26,130 -6,146 18,140 C42,134 52,110 38,92Z" fill="#9aae88" opacity="0.62"/>
+    <path d="M34,136 C58,116 92,124 92,148 C92,172 68,184 44,178 C20,172 12,152 26,138Z" fill="#7d9168" opacity="0.70"/>
+  </svg>
+  <div style="max-width:680px;margin:0 auto;position:relative;z-index:2;">
+    <span class="s-eyebrow">Share your memories</span>
+    <h2 class="s-title">Upload a <em>photo</em></h2>
+    <div class="flourish"><span></span><i></i><span></span></div>
+    <p class="body-copy" style="margin-bottom:36px;">We'd love to see the celebrations through your eyes. Upload a photo from any of the three days, add your name and a message, and it will appear in the shared gallery below for all guests to enjoy.</p>
+
+    <!-- Upload form -->
+    <div id="uploadBox" style="border:0.5px solid var(--border-mid);padding:40px;background:var(--ivory-dark);">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div>
+          <label style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:8px;">Your Name</label>
+          <input id="uploaderName" type="text" placeholder="e.g. Priya & Raj" style="width:100%;padding:12px 16px;border:0.5px solid var(--border-mid);background:#fff;font-family:'Jost',sans-serif;font-size:14px;font-weight:300;color:var(--text);outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--sage)'" onblur="this.style.borderColor='var(--border-mid)'">
+        </div>
+        <div>
+          <label style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:8px;">From which day?</label>
+          <select id="uploaderDay" style="width:100%;padding:12px 16px;border:0.5px solid var(--border-mid);background:#fff;font-family:'Jost',sans-serif;font-size:14px;font-weight:300;color:var(--text);outline:none;appearance:none;cursor:pointer;">
+            <option value="Jago Celebration">Jago Celebration</option>
+            <option value="Mehndi &amp; Sangeet">Mehndi &amp; Sangeet</option>
+            <option value="The Wedding">The Wedding</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:8px;">Message or Caption</label>
+        <textarea id="uploaderCaption" placeholder="A memory, a wish, a moment..." rows="3" style="width:100%;padding:12px 16px;border:0.5px solid var(--border-mid);background:#fff;font-family:'Jost',sans-serif;font-size:14px;font-weight:300;color:var(--text);outline:none;resize:vertical;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--sage)'" onblur="this.style.borderColor='var(--border-mid)'"></textarea>
+      </div>
+
+      <!-- Drop zone -->
+      <div id="dropZone" style="border:0.5px dashed var(--sage-pale);padding:40px 24px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;margin-bottom:20px;" onclick="document.getElementById('photoInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--sage)';this.style.background='var(--sage-wash)'" ondragleave="this.style.borderColor='var(--sage-pale)';this.style.background='transparent'" ondrop="handleDrop(event)">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style="margin:0 auto 12px;display:block;"><path d="M16 4L16 20M16 4L10 10M16 4L22 10" stroke="var(--sage)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 24v2a2 2 0 002 2h20a2 2 0 002-2v-2" stroke="var(--sage-light)" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <p style="font-size:13px;color:var(--text-muted);font-weight:300;">Drag &amp; drop a photo here, or <span style="color:var(--sage);border-bottom:0.5px solid var(--sage-pale);">browse</span></p>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:6px;opacity:0.7;">JPG, PNG or WEBP · Max 4MB</p>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+
+      <!-- Preview -->
+      <div id="previewWrap" style="display:none;margin-bottom:20px;text-align:center;">
+        <img id="previewImg" style="max-height:200px;max-width:100%;object-fit:contain;border:0.5px solid var(--border);">
+        <p style="font-size:11px;color:var(--sage);margin-top:8px;cursor:pointer;" onclick="clearPreview()">✕ Remove</p>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <button onclick="submitPhoto()" style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:#fff;background:var(--deep);padding:14px 40px;border:none;cursor:pointer;font-family:'Jost',sans-serif;transition:background 0.25s;" onmouseover="this.style.background='var(--sage)'" onmouseout="this.style.background='var(--deep)'">Share Photo</button>
+        <span id="uploadStatus" style="font-size:13px;color:var(--text-muted);font-weight:300;"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section style="background:var(--ivory-dark);padding:72px 60px;position:relative;overflow:hidden;">
+  <svg class="botanical" style="top:-10px;right:-20px;width:190px;opacity:0.56;" viewBox="0 0 190 270" fill="none">
+    <path d="M170 0 C167 40 172 84 160 134 C153 162 164 198 162 238" stroke="#8a9e78" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M160,44 C140,26 114,32 108,56 C102,80 122,100 144,94 C166,88 174,66 160,46Z" fill="#8fa07e" opacity="0.66"/>
+    <path d="M162,98 C182,80 199,88 198,110 C197,132 178,142 158,136 C138,130 130,110 146,96Z" fill="#9aae88" opacity="0.56"/>
+    <path d="M160,148 C140,134 118,140 116,160 C114,180 132,190 152,184 C172,178 178,158 162,146Z" fill="#7d9168" opacity="0.60"/>
+  </svg>
+  <div style="max-width:1100px;margin:0 auto;position:relative;z-index:2;">
+    <div style="text-align:center;max-width:520px;margin:0 auto 52px;">
+      <span class="s-eyebrow">Guest Gallery</span>
+      <h2 class="s-title">Memories from <em>Mallorca</em></h2>
+      <div class="flourish c"><span></span><i></i><span></span></div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="galleryLoading" style="text-align:center;padding:60px 0;">
+      <div style="width:32px;height:32px;border:1.5px solid var(--sage-pale);border-top-color:var(--sage);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div>
+      <p style="font-size:13px;color:var(--text-muted);font-weight:300;">Loading photos...</p>
+    </div>
+
+    <!-- Empty state -->
+    <div id="galleryEmpty" style="display:none;text-align:center;padding:80px 0;">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin:0 auto 20px;display:block;opacity:0.3;"><rect x="6" y="10" width="36" height="28" rx="3" stroke="var(--sage)" stroke-width="1.2"/><circle cx="18" cy="20" r="3" stroke="var(--sage)" stroke-width="1.2"/><path d="M6 30l10-8 8 6 6-4 12 10" stroke="var(--sage)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--text-mid);">No photos yet — be the first to share!</p>
+    </div>
+
+    <!-- Photo grid -->
+    <div id="photoGrid" style="display:none;columns:3 280px;column-gap:3px;"></div>
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(10,12,8,0.94);z-index:999;align-items:center;justify-content:center;flex-direction:column;padding:20px;" onclick="closeLightbox()">
+  <button onclick="closeLightbox();event.stopPropagation();" style="position:absolute;top:24px;right:28px;background:none;border:none;color:rgba(255,255,255,0.6);font-size:28px;cursor:pointer;font-family:'Cormorant Garamond',serif;">✕</button>
+  <img id="lightboxImg" style="max-height:80vh;max-width:90vw;object-fit:contain;" onclick="event.stopPropagation()">
+  <div style="margin-top:20px;text-align:center;" onclick="event.stopPropagation()">
+    <p id="lightboxName" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:white;margin-bottom:4px;"></p>
+    <p id="lightboxCaption" style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:4px;max-width:500px;font-weight:300;"></p>
+    <p id="lightboxDay" style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--sage-light);"></p>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand" onclick="showPage('home')">Jeevan &amp; Nikita · May 2026</span>
+  <ul class="footer-links">
+    <li><a onclick="showPage('home')">Home</a></li>
+    <li><a onclick="showPage('jago')">Jago</a></li>
+    <li><a onclick="showPage('mehndi')">Mehndi</a></li>
+    <li><a onclick="showPage('wedding')">The Wedding</a></li>
+    <li><a onclick="showPage('mallorca')">Mallorca</a></li>
+    <li><a onclick="showPage('photos')">Photos</a></li>
+  </ul>
+</footer>
+</div><!-- end #page-photos -->
+
 </body>
 </html>
